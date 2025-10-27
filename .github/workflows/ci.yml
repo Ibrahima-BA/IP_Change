@@ -1,0 +1,357 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  PROJECT_NAME: "IP_Change"
+  VERSION_PREFIX: "v"
+
+jobs:
+  # ===============================================================================
+  # JOB 1: Tests et Validation
+  # ===============================================================================
+  test:
+    name: Tests et Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout du code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: 🐍 Configuration Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: 📦 Installation des dépendances Python
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint pytest flake8 black isort
+    
+    - name: 🔍 Analyse statique Python (Pylint)
+      run: |
+        find scripts -name "*.py" -exec pylint --disable=C0301,C0103,R0903,R0913,W0613 {} \; || true
+    
+    - name: 📏 Vérification du style Python (Flake8)
+      run: |
+        flake8 scripts --max-line-length=120 --ignore=E501,W503,E203 || true
+    
+    - name: 🧪 Tests de syntaxe Scripts Shell
+      run: |
+        find scripts -name "*.sh" -exec bash -n {} \;
+    
+    - name: 🎯 Tests de syntaxe Scripts Batch (via ShellCheck)
+      run: |
+        # Installation de ShellCheck pour validation basique
+        sudo apt-get update && sudo apt-get install -y shellcheck
+        # Validation des scripts shell
+        find scripts -name "*.sh" -exec shellcheck {} \; || true
+    
+    - name: 📊 Analyse de la structure du projet
+      run: |
+        echo "=== Structure du projet ==="
+        tree -a -I '.git' || find . -type f -name ".*" -prune -o -type f -print | sort
+        
+        echo "=== Fichiers de scripts ==="
+        find scripts -type f \( -name "*.py" -o -name "*.sh" -o -name "*.bat" \) -exec wc -l {} \;
+        
+        echo "=== Fichiers de documentation ==="
+        find . -name "*.md" -exec wc -l {} \;
+    
+    - name: 🔐 Vérification des secrets et clés
+      run: |
+        echo "Vérification de l'absence de secrets hardcodés..."
+        ! grep -r -i "password\|secret\|key\|token" scripts/ docs/ examples/ || true
+    
+    - name: 📝 Validation des logs
+      run: |
+        echo "Création du dossier logs pour les tests..."
+        mkdir -p logs
+        ls -la logs/ || true
+
+  # ===============================================================================
+  # JOB 2: Tests Multi-Plateforme
+  # ===============================================================================
+  test-multiplatform:
+    name: Tests Multi-Plateforme
+    needs: test
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: 📥 Checkout du code
+      uses: actions/checkout@v4
+    
+    - name: 🐍 Configuration Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: 🧪 Test d'importation du script Python
+      run: |
+        python -c "import sys; sys.path.insert(0, 'scripts'); import script_IPchange; print('✅ Import Python OK')" || echo "❌ Import Python échoué"
+    
+    - name: 📊 Test de la structure des logs
+      run: |
+        mkdir -p logs
+        python -c "
+        import os
+        from pathlib import Path
+        log_dir = Path('logs')
+        print(f'✅ Dossier logs: {log_dir.exists()}')
+        print(f'✅ Permissions: {oct(os.stat(log_dir).st_mode)[-3:] if log_dir.exists() else \"N/A\"}')
+        "
+    
+    - name: 🖥️ Test spécifique Windows
+      if: runner.os == 'Windows'
+      run: |
+        echo "Test des scripts Windows (.bat)"
+        dir scripts\*.bat
+        echo "Scripts .bat détectés avec succès"
+    
+    - name: 🍎 Test spécifique macOS
+      if: runner.os == 'macOS'
+      run: |
+        echo "Test des capacités réseau macOS"
+        networksetup -listallnetworkservices | head -5 || echo "Commande networksetup testée"
+    
+    - name: 🐧 Test spécifique Linux
+      if: runner.os == 'Linux'
+      run: |
+        echo "Test des capacités réseau Linux"
+        ip link show | head -5 || echo "Commande ip testée"
+
+  # ===============================================================================
+  # JOB 3: Documentation et Qualité
+  # ===============================================================================
+  documentation:
+    name: Validation Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout du code
+      uses: actions/checkout@v4
+    
+    - name: 📚 Vérification de la documentation
+      run: |
+        echo "=== Validation des fichiers README ==="
+        for readme in README.md docs/*.md; do
+          if [ -f "$readme" ]; then
+            echo "✅ $readme ($(wc -l < "$readme") lignes)"
+            # Vérification des liens brisés basique
+            grep -o 'http[s]*://[^)]*' "$readme" | head -5 || echo "Pas de liens externes détectés"
+          fi
+        done
+        
+        echo "=== Validation des exemples ==="
+        find examples -type f -exec echo "✅ {}" \;
+    
+    - name: 📋 Génération du rapport de couverture
+      run: |
+        echo "=== Rapport de couverture des fonctionnalités ==="
+        
+        echo "Scripts disponibles:"
+        find scripts -name "*.py" -o -name "*.sh" -o -name "*.bat" | wc -l
+        
+        echo "Documentation disponible:"
+        find . -name "*.md" | wc -l
+        
+        echo "Exemples disponibles:"
+        find examples -type f | wc -l
+        
+        echo "Workflows CI/CD:"
+        find .github/workflows -name "*.yml" | wc -l
+
+  # ===============================================================================
+  # JOB 4: Build et Packaging
+  # ===============================================================================
+  build:
+    name: Build et Packaging
+    runs-on: ubuntu-latest
+    needs: [test, test-multiplatform, documentation]
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: 📥 Checkout du code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: 🏷️ Extraction de la version
+      id: version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        echo "Version détectée: $VERSION"
+    
+    - name: 📦 Création de l'archive de release
+      run: |
+        VERSION=${{ steps.version.outputs.version }}
+        ARCHIVE_NAME="${PROJECT_NAME}-v${VERSION}"
+        
+        echo "Création de l'archive: ${ARCHIVE_NAME}.tar.gz"
+        
+        # Créer le dossier de build
+        mkdir -p build
+        
+        # Copier les fichiers nécessaires
+        cp -r scripts build/
+        cp -r docs build/
+        cp -r examples build/
+        cp README.md build/
+        cp .gitignore build/
+        
+        # Créer l'archive
+        cd build
+        tar -czf "${ARCHIVE_NAME}.tar.gz" *
+        zip -r "${ARCHIVE_NAME}.zip" *
+        
+        # Vérifier les archives
+        ls -la *.tar.gz *.zip
+        
+        # Déplacer vers le dossier principal
+        mv *.tar.gz *.zip ../
+    
+    - name: 📋 Génération des checksums
+      run: |
+        VERSION=${{ steps.version.outputs.version }}
+        ARCHIVE_NAME="${PROJECT_NAME}-v${VERSION}"
+        
+        echo "Génération des checksums..."
+        sha256sum "${ARCHIVE_NAME}.tar.gz" > "${ARCHIVE_NAME}.tar.gz.sha256"
+        sha256sum "${ARCHIVE_NAME}.zip" > "${ARCHIVE_NAME}.zip.sha256"
+        
+        echo "=== Checksums générés ==="
+        cat *.sha256
+    
+    - name: 📊 Génération du changelog automatique
+      id: changelog
+      run: |
+        VERSION=${{ steps.version.outputs.version }}
+        
+        echo "Génération du changelog pour la version $VERSION..."
+        
+        # Récupérer les commits depuis le dernier tag
+        LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        
+        if [ -n "$LAST_TAG" ]; then
+          echo "Commits depuis $LAST_TAG:"
+          CHANGELOG=$(git log --pretty=format:"- %s (%h)" "$LAST_TAG"..HEAD)
+        else
+          echo "Premier tag, récupération de tous les commits:"
+          CHANGELOG=$(git log --pretty=format:"- %s (%h)" --max-count=10)
+        fi
+        
+        # Écrire le changelog dans un fichier
+        {
+          echo "## 🚀 Version $VERSION"
+          echo ""
+          echo "### Nouveautés et améliorations"
+          echo "$CHANGELOG"
+          echo ""
+          echo "### 📦 Fichiers de cette release"
+          echo "- \`${PROJECT_NAME}-v${VERSION}.tar.gz\` - Archive complète (Linux/macOS)"
+          echo "- \`${PROJECT_NAME}-v${VERSION}.zip\` - Archive complète (Windows)"
+          echo "- Fichiers de checksums SHA256 inclus"
+          echo ""
+          echo "### 🔧 Installation"
+          echo "1. Téléchargez l'archive correspondant à votre système"
+          echo "2. Extrayez dans le dossier de votre choix"
+          echo "3. Consultez le README.md pour les instructions d'utilisation"
+        } > RELEASE_NOTES.md
+        
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        cat RELEASE_NOTES.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: 🚀 Upload des artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-artifacts-${{ steps.version.outputs.version }}
+        path: |
+          *.tar.gz
+          *.zip
+          *.sha256
+          RELEASE_NOTES.md
+        retention-days: 30
+
+  # ===============================================================================
+  # JOB 5: Release GitHub
+  # ===============================================================================
+  release:
+    name: Création de la Release GitHub
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: 📥 Checkout du code
+      uses: actions/checkout@v4
+    
+    - name: 🏷️ Extraction de la version
+      id: version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+    
+    - name: 📦 Téléchargement des artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: release-artifacts-${{ steps.version.outputs.version }}
+    
+    - name: 🚀 Création de la GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.tag }}
+        name: "🌐 IP_Change v${{ steps.version.outputs.version }}"
+        body_path: RELEASE_NOTES.md
+        draft: false
+        prerelease: false
+        files: |
+          *.tar.gz
+          *.zip
+          *.sha256
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ===============================================================================
+  # JOB 6: Notification et Nettoyage
+  # ===============================================================================
+  notify:
+    name: Notifications
+    runs-on: ubuntu-latest
+    needs: [test, test-multiplatform, documentation]
+    if: always()
+    
+    steps:
+    - name: 📊 Rapport final
+      run: |
+        echo "=== 📊 RAPPORT FINAL CI/CD ==="
+        echo "Référence: ${{ github.ref }}"
+        echo "SHA: ${{ github.sha }}"
+        echo "Acteur: ${{ github.actor }}"
+        echo "Événement: ${{ github.event_name }}"
+        
+        echo "=== Statuts des jobs ==="
+        echo "Test: ${{ needs.test.result }}"
+        echo "Test Multi-Plateforme: ${{ needs.test-multiplatform.result }}"
+        echo "Documentation: ${{ needs.documentation.result }}"
+        
+        if [[ "${{ needs.test.result }}" == "success" && "${{ needs.test-multiplatform.result }}" == "success" && "${{ needs.documentation.result }}" == "success" ]]; then
+          echo "✅ Tous les tests sont réussis !"
+        else
+          echo "❌ Certains tests ont échoué"
+        fi

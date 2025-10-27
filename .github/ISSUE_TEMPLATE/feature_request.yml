@@ -1,0 +1,200 @@
+name: ✨ Demande de Fonctionnalité
+description: Proposer une nouvelle fonctionnalité pour les scripts de configuration réseau
+title: "[FEATURE] "
+labels: ["enhancement", "feature-request"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de proposer une amélioration ! 🚀
+        Vos idées nous aident à rendre les scripts plus utiles pour tous.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Vérifications préliminaires
+      description: Avant de soumettre cette demande
+      options:
+        - label: J'ai vérifié que cette fonctionnalité n'existe pas déjà
+          required: true
+        - label: J'ai consulté la documentation et les issues existantes
+          required: true
+        - label: Cette fonctionnalité améliorerait l'expérience utilisateur
+          required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Catégorie de fonctionnalité
+      description: Quel type de fonctionnalité proposez-vous ?
+      options:
+        - Interface utilisateur / UX
+        - Nouvelle option de configuration réseau
+        - Amélioration des logs/diagnostics
+        - Support d'un nouveau système d'exploitation
+        - Performance / Optimisation
+        - Sécurité
+        - Documentation
+        - Tests / Validation
+        - Autre
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priorité suggérée
+      description: Quelle est l'importance de cette fonctionnalité ?
+      options:
+        - Haute (fonctionnalité critique manquante)
+        - Moyenne (amélioration notable)
+        - Basse (nice-to-have)
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem-description
+    attributes:
+      label: Problème ou besoin identifié
+      description: Quel problème cette fonctionnalité résoudrait-elle ?
+      placeholder: |
+        Décrivez le problème ou le besoin qui vous amène à proposer cette fonctionnalité...
+        Ex: "Actuellement, il n'est pas possible de..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution-description
+    attributes:
+      label: Solution proposée
+      description: Comment imagineriez-vous cette fonctionnalité ?
+      placeholder: |
+        Décrivez en détail la solution que vous proposez...
+        Ex: "Il serait utile d'avoir une option qui permet de..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: target-scripts
+    attributes:
+      label: Scripts concernés
+      description: Quels scripts seraient impactés par cette fonctionnalité ?
+      options:
+        - ip_config.bat (Script Windows)
+        - script_IPchange.py (Script Python)
+        - script_IPchange.sh (Script Shell)
+        - list_interfaces.py (Utilitaire)
+        - Tous les scripts
+        - Nouveau script/utilitaire
+        - Documentation seulement
+        - Autre
+    validations:
+      required: true
+
+  - type: dropdown
+    id: target-os
+    attributes:
+      label: Systèmes d'exploitation ciblés
+      description: Sur quels OS cette fonctionnalité devrait-elle fonctionner ?
+      options:
+        - Windows seulement
+        - macOS seulement  
+        - Linux seulement
+        - Windows + macOS
+        - Windows + Linux
+        - macOS + Linux
+        - Tous les OS (multiplateforme)
+        - Indépendant de l'OS
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Cas d'usage
+      description: Dans quelles situations cette fonctionnalité serait-elle utilisée ?
+      placeholder: |
+        Décrivez des scénarios concrets d'utilisation...
+        Ex: 
+        - "Un administrateur réseau pourrait utiliser cela pour..."
+        - "Dans un environnement d'entreprise, cela permettrait de..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation-ideas
+    attributes:
+      label: Idées d'implémentation (optionnel)
+      description: Si vous avez des idées sur comment implémenter cette fonctionnalité
+      placeholder: |
+        Suggestions techniques, références, exemples de code...
+        Ex: "On pourrait ajouter une nouvelle option au menu principal..."
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considérées
+      description: Avez-vous considéré d'autres approches pour résoudre ce problème ?
+      placeholder: |
+        Autres solutions envisagées et pourquoi elles ne conviennent pas...
+
+  - type: checkboxes
+    id: complexity
+    attributes:
+      label: Estimation de complexité
+      description: Comment estimez-vous la complexité de cette fonctionnalité ?
+      options:
+        - label: Simple (modification mineure, quelques lignes)
+        - label: Modérée (nouvelle fonction, tests requis)
+        - label: Complexe (refactoring important, impact multiple)
+        - label: Incertain
+
+  - type: checkboxes
+    id: compatibility
+    attributes:
+      label: Considérations de compatibilité
+      description: Cette fonctionnalité pourrait-elle affecter la compatibilité ?
+      options:
+        - label: Compatible avec les versions existantes
+        - label: Pourrait nécessiter des changements de configuration
+        - label: Pourrait affecter les scripts existants
+        - label: Nécessite de nouvelles dépendances
+        - label: Incertain
+
+  - type: textarea
+    id: mockup-example
+    attributes:
+      label: Exemple d'interface ou de sortie
+      description: Si applicable, montrez à quoi ressemblerait cette fonctionnalité
+      render: shell
+      placeholder: |
+        Exemple de ce que l'utilisateur verrait...
+        Ex:
+        ========================================
+          Configuration TCP/IP v3.2.0
+        ========================================
+        
+        ...nouvelle option...
+        8. 🆕 Sauvegarde de configuration réseau
+        ...
+
+  - type: input
+    id: references
+    attributes:
+      label: Références
+      description: Liens vers des documentations, outils similaires, etc.
+      placeholder: "https://example.com/documentation"
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Seriez-vous intéressé(e) à contribuer à cette fonctionnalité ?
+      options:
+        - label: Je serais prêt(e) à aider à l'implémentation
+        - label: Je peux aider avec les tests
+        - label: Je peux aider avec la documentation
+        - label: Je peux fournir des retours d'usage
+        - label: Je préfère juste signaler l'idée

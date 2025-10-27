@@ -1,0 +1,177 @@
+name: 🐛 Rapport de Bug
+description: Signaler un problème avec les scripts de configuration réseau
+title: "[BUG] "
+labels: ["bug", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de prendre le temps de signaler ce bug ! 
+        Plus vous fournirez d'informations, plus nous pourrons résoudre le problème rapidement.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Vérifications préliminaires
+      description: Avant de soumettre ce rapport, veuillez vérifier les points suivants
+      options:
+        - label: J'ai cherché dans les issues existantes et ce problème n'a pas déjà été signalé
+          required: true
+        - label: J'ai consulté la documentation (README.md et docs/)
+          required: true
+        - label: J'ai exécuté le script avec les privilèges administrateur/root
+          required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Système d'exploitation
+      description: Sur quel OS rencontrez-vous le problème ?
+      options:
+        - Windows 10
+        - Windows 11
+        - Windows (autre version)
+        - macOS (dernière version)
+        - macOS (version antérieure)
+        - Linux Ubuntu
+        - Linux (autre distribution)
+        - Autre
+    validations:
+      required: true
+
+  - type: dropdown
+    id: script
+    attributes:
+      label: Script concerné
+      description: Quel script présente le problème ?
+      options:
+        - ip_config.bat (Script Windows principal)
+        - script_IPchange.py (Script Python multiplateforme)
+        - script_IPchange.sh (Script Shell Unix)
+        - list_interfaces.py (Utilitaire de détection)
+        - Tous les scripts
+        - Autre/Incertain
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Sévérité
+      description: Quelle est la sévérité du problème ?
+      options:
+        - Critique (le script ne fonctionne pas du tout)
+        - Majeure (fonctionnalité principale cassée)
+        - Modérée (problème gênant mais contournable)
+        - Mineure (problème cosmétique ou rare)
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Description du bug
+      description: Description claire et concise du problème rencontré
+      placeholder: Décrivez ce qui ne fonctionne pas comme attendu...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Étapes pour reproduire
+      description: Comment reproduire le problème ?
+      placeholder: |
+        1. Aller à '...'
+        2. Cliquer sur '...'
+        3. Voir l'erreur
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Comportement attendu
+      description: Que devrait-il se passer normalement ?
+      placeholder: Le script devrait...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Comportement actuel
+      description: Que se passe-t-il réellement ?
+      placeholder: Au lieu de cela, le script...
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-output
+    attributes:
+      label: Messages d'erreur
+      description: Si il y a des messages d'erreur, copiez-les ici
+      render: shell
+      placeholder: |
+        Collez ici les messages d'erreur complets...
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Si disponibles, joignez les logs (fichiers dans le dossier logs/)
+      render: shell
+      placeholder: |
+        Contenu des fichiers logs...
+
+  - type: input
+    id: network-config
+    attributes:
+      label: Configuration réseau
+      description: Quelle est votre configuration réseau actuelle ? (IP, interface, etc.)
+      placeholder: "Ex: Wi-Fi, IP DHCP 192.168.1.100, passerelle 192.168.1.1"
+
+  - type: dropdown
+    id: admin-privileges
+    attributes:
+      label: Privilèges administrateur
+      description: Avez-vous exécuté le script avec les privilèges administrateur ?
+      options:
+        - Oui, en tant qu'administrateur/root
+        - Non, en utilisateur normal
+        - Incertain
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Contexte supplémentaire
+      description: Ajoutez toute autre information utile (captures d'écran, configuration spéciale, etc.)
+      placeholder: |
+        - Antivirus actif ?
+        - Réseau d'entreprise ?
+        - Configuration spéciale ?
+        - Autres logiciels réseau installés ?
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Quelle version du projet utilisez-vous ?
+      placeholder: "Ex: v3.1.0 ou commit hash"
+
+  - type: checkboxes
+    id: debugging
+    attributes:
+      label: Étapes de débogage effectuées
+      description: Qu'avez-vous déjà essayé ?
+      options:
+        - label: Redémarré l'ordinateur
+        - label: Testé sur une autre interface réseau
+        - label: Testé en mode verbose
+        - label: Vérifié les logs
+        - label: Testé avec des paramètres différents
+        - label: Consulté la documentation de dépannage

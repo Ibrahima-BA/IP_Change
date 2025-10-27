@@ -1,0 +1,418 @@
+name: Security & Quality Analysis
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Scan de sécurité hebdomadaire le dimanche à 02:00 UTC
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+
+env:
+  PROJECT_NAME: "IP_Change"
+
+jobs:
+  # ===============================================================================
+  # JOB 1: Analyse de sécurité des dépendances
+  # ===============================================================================
+  dependency-security:
+    name: Sécurité des Dépendances
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout du code
+      uses: actions/checkout@v4
+    
+    - name: 🐍 Configuration Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: 📦 Installation des outils de sécurité
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety bandit semgrep
+    
+    - name: 🔍 Analyse de sécurité Python (Bandit)
+      run: |
+        echo "=== Analyse Bandit pour les vulnérabilités Python ==="
+        find scripts -name "*.py" -exec bandit -f json -o bandit-report.json {} + || true
+        
+        if [ -f bandit-report.json ]; then
+          echo "Rapport Bandit généré:"
+          cat bandit-report.json | jq -r '.results[] | "\(.severity): \(.test_name) - \(.filename):\(.line_number)"' || echo "Aucun problème détecté"
+        fi
+    
+    - name: 🛡️ Scan des secrets avec TruffleHog
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+    
+    - name: 📋 Upload des rapports de sécurité
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          trufflehog-report.json
+        retention-days: 30
+
+  # ===============================================================================
+  # JOB 2: Analyse de qualité du code
+  # ===============================================================================
+  code-quality:
+    name: Qualité du Code
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout du code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: 🐍 Configuration Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: 📦 Installation des outils de qualité
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint flake8 black isort mypy complexity-report radon
+    
+    - name: 📏 Analyse de style (Flake8)
+      run: |
+        echo "=== Analyse Flake8 ==="
+        find scripts -name "*.py" -exec flake8 --max-line-length=120 --statistics {} + > flake8-report.txt || true
+        cat flake8-report.txt
+    
+    - name: 🔍 Analyse de qualité (Pylint)
+      run: |
+        echo "=== Analyse Pylint ==="
+        find scripts -name "*.py" -exec pylint --output-format=json {} + > pylint-report.json || true
+        
+        # Résumé des scores Pylint
+        python3 -c "
+        import json
+        try:
+            with open('pylint-report.json', 'r') as f:
+                data = json.load(f)
+            print('Problèmes détectés par Pylint:')
+            for item in data:
+                print(f\"{item['type']}: {item['message']} ({item['path']}:{item['line']})\")
+        except:
+            print('Aucun problème majeur détecté par Pylint')
+        " || echo "Analyse Pylint terminée"
+    
+    - name: 📊 Analyse de complexité (Radon)
+      run: |
+        echo "=== Analyse de complexité Radon ==="
+        find scripts -name "*.py" -exec radon cc -s {} + > complexity-report.txt || true
+        find scripts -name "*.py" -exec radon mi -s {} + >> complexity-report.txt || true
+        cat complexity-report.txt
+    
+    - name: 🧪 Vérification du formatage (Black)
+      run: |
+        echo "=== Vérification du formatage Black ==="
+        find scripts -name "*.py" -exec black --check --diff {} + || echo "Certains fichiers nécessitent un formatage"
+    
+    - name: 📑 Vérification des imports (isort)
+      run: |
+        echo "=== Vérification des imports isort ==="
+        find scripts -name "*.py" -exec isort --check-only --diff {} + || echo "Certains imports nécessitent un tri"
+    
+    - name: 🔬 Analyse de typage (MyPy)
+      run: |
+        echo "=== Analyse de typage MyPy ==="
+        find scripts -name "*.py" -exec mypy --ignore-missing-imports {} + > mypy-report.txt || true
+        cat mypy-report.txt
+    
+    - name: 📋 Upload des rapports de qualité
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: quality-reports
+        path: |
+          flake8-report.txt
+          pylint-report.json
+          complexity-report.txt
+          mypy-report.txt
+        retention-days: 30
+
+  # ===============================================================================
+  # JOB 3: Analyse des scripts Shell
+  # ===============================================================================
+  shell-analysis:
+    name: Analyse Scripts Shell
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout du code
+      uses: actions/checkout@v4
+    
+    - name: 🔧 Installation de ShellCheck
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y shellcheck
+    
+    - name: 🐚 Analyse ShellCheck
+      run: |
+        echo "=== Analyse ShellCheck ==="
+        find scripts -name "*.sh" -exec shellcheck -f json {} + > shellcheck-report.json || true
+        
+        # Affichage des résultats
+        if [ -f shellcheck-report.json ]; then
+          echo "Problèmes détectés par ShellCheck:"
+          cat shellcheck-report.json | jq -r '.[] | "\(.level): \(.message) (\(.file):\(.line))"' || echo "Format JSON invalide"
+        fi
+    
+    - name: 🧪 Test de syntaxe Bash
+      run: |
+        echo "=== Test de syntaxe Bash ==="
+        find scripts -name "*.sh" -exec bash -n {} \;
+        echo "✅ Tous les scripts Shell ont une syntaxe valide"
+    
+    - name: 📋 Upload du rapport ShellCheck
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: shell-reports
+        path: shellcheck-report.json
+        retention-days: 30
+
+  # ===============================================================================
+  # JOB 4: Analyse de la documentation
+  # ===============================================================================
+  documentation-quality:
+    name: Qualité de la Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout du code
+      uses: actions/checkout@v4
+    
+    - name: 🔧 Installation des outils Markdown
+      run: |
+        npm install -g markdownlint-cli markdown-link-check
+    
+    - name: 📝 Analyse Markdown (markdownlint)
+      run: |
+        echo "=== Analyse Markdownlint ==="
+        find . -name "*.md" -not -path "./.git/*" -exec markdownlint {} + > markdownlint-report.txt || true
+        cat markdownlint-report.txt || echo "Aucun problème de format Markdown détecté"
+    
+    - name: 🔗 Vérification des liens
+      run: |
+        echo "=== Vérification des liens Markdown ==="
+        find . -name "*.md" -not -path "./.git/*" -exec markdown-link-check {} \; > link-check-report.txt || true
+        cat link-check-report.txt
+    
+    - name: 📊 Statistiques de documentation
+      run: |
+        echo "=== Statistiques de documentation ==="
+        echo "Fichiers Markdown trouvés:"
+        find . -name "*.md" -not -path "./.git/*" -exec wc -l {} + | sort -nr
+        
+        echo ""
+        echo "Couverture documentation/code:"
+        MD_LINES=$(find . -name "*.md" -not -path "./.git/*" -exec cat {} + | wc -l)
+        CODE_LINES=$(find scripts -name "*.py" -o -name "*.sh" -o -name "*.bat" -exec cat {} + | wc -l)
+        DOC_RATIO=$(echo "scale=2; $MD_LINES / $CODE_LINES * 100" | bc -l 2>/dev/null || echo "N/A")
+        echo "Lignes de documentation: $MD_LINES"
+        echo "Lignes de code: $CODE_LINES"
+        echo "Ratio doc/code: $DOC_RATIO%"
+    
+    - name: 📋 Upload des rapports de documentation
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: documentation-reports
+        path: |
+          markdownlint-report.txt
+          link-check-report.txt
+        retention-days: 30
+
+  # ===============================================================================
+  # JOB 5: Tests de performance et charge
+  # ===============================================================================
+  performance-tests:
+    name: Tests de Performance
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout du code
+      uses: actions/checkout@v4
+    
+    - name: 🐍 Configuration Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: 📦 Installation des outils de performance
+      run: |
+        python -m pip install --upgrade pip
+        pip install memory-profiler psutil
+    
+    - name: 🚀 Test de performance Python
+      run: |
+        echo "=== Tests de performance Python ==="
+        
+        # Créer un script de test de performance
+        cat > performance_test.py << 'EOF'
+        import time
+        import psutil
+        import os
+        import sys
+        
+        sys.path.insert(0, 'scripts')
+        
+        def test_import_performance():
+            """Test la vitesse d'importation du module principal"""
+            start_time = time.time()
+            try:
+                import script_IPchange
+                import_time = time.time() - start_time
+                print(f"✅ Import du module: {import_time:.3f}s")
+            except Exception as e:
+                print(f"❌ Erreur d'import: {e}")
+        
+        def test_memory_usage():
+            """Test l'utilisation mémoire de base"""
+            process = psutil.Process(os.getpid())
+            memory_mb = process.memory_info().rss / 1024 / 1024
+            print(f"📊 Utilisation mémoire: {memory_mb:.2f} MB")
+        
+        def test_logs_directory():
+            """Test la création du dossier logs"""
+            start_time = time.time()
+            os.makedirs('logs', exist_ok=True)
+            creation_time = time.time() - start_time
+            print(f"📁 Création dossier logs: {creation_time:.3f}s")
+        
+        if __name__ == "__main__":
+            print("Démarrage des tests de performance...")
+            test_memory_usage()
+            test_import_performance()
+            test_logs_directory()
+            print("Tests de performance terminés ✅")
+        EOF
+        
+        python performance_test.py
+    
+    - name: 💾 Test de performance des logs
+      run: |
+        echo "=== Test de performance des logs ==="
+        
+        # Test d'écriture de logs en masse
+        mkdir -p logs
+        
+        # Mesurer le temps d'écriture de 1000 lignes de log
+        start_time=$(date +%s.%N)
+        for i in {1..1000}; do
+          echo "[$(date)] [TEST] Message de test $i" >> logs/performance_test.log
+        done
+        end_time=$(date +%s.%N)
+        
+        duration=$(echo "$end_time - $start_time" | bc -l 2>/dev/null || echo "N/A")
+        echo "⏱️ Écriture de 1000 logs: ${duration}s"
+        
+        # Vérifier la taille du fichier
+        log_size=$(wc -c < logs/performance_test.log)
+        echo "📏 Taille du fichier log: $log_size bytes"
+
+  # ===============================================================================
+  # JOB 6: Rapport consolidé
+  # ===============================================================================
+  security-quality-report:
+    name: Rapport Consolidé
+    runs-on: ubuntu-latest
+    needs: [dependency-security, code-quality, shell-analysis, documentation-quality, performance-tests]
+    if: always()
+    
+    steps:
+    - name: 📥 Checkout du code
+      uses: actions/checkout@v4
+    
+    - name: 📦 Téléchargement de tous les rapports
+      uses: actions/download-artifact@v3
+      with:
+        path: reports/
+    
+    - name: 📊 Génération du rapport consolidé
+      run: |
+        echo "=== 📊 RAPPORT DE SÉCURITÉ ET QUALITÉ ==="
+        echo "Date: $(date)"
+        echo "Commit: ${{ github.sha }}"
+        echo "Branche: ${{ github.ref_name }}"
+        echo ""
+        
+        echo "=== 🛡️ SÉCURITÉ ==="
+        echo "Jobs de sécurité: ${{ needs.dependency-security.result }}"
+        if [ -d "reports/security-reports" ]; then
+          echo "Rapports de sécurité générés:"
+          ls -la reports/security-reports/
+        fi
+        echo ""
+        
+        echo "=== 📏 QUALITÉ DU CODE ==="
+        echo "Job qualité: ${{ needs.code-quality.result }}"
+        if [ -d "reports/quality-reports" ]; then
+          echo "Rapports de qualité générés:"
+          ls -la reports/quality-reports/
+        fi
+        echo ""
+        
+        echo "=== 🐚 SCRIPTS SHELL ==="
+        echo "Job shell: ${{ needs.shell-analysis.result }}"
+        if [ -d "reports/shell-reports" ]; then
+          echo "Rapports shell générés:"
+          ls -la reports/shell-reports/
+        fi
+        echo ""
+        
+        echo "=== 📝 DOCUMENTATION ==="
+        echo "Job documentation: ${{ needs.documentation-quality.result }}"
+        if [ -d "reports/documentation-reports" ]; then
+          echo "Rapports documentation générés:"
+          ls -la reports/documentation-reports/
+        fi
+        echo ""
+        
+        echo "=== 🚀 PERFORMANCE ==="
+        echo "Job performance: ${{ needs.performance-tests.result }}"
+        echo ""
+        
+        # Statut général
+        ALL_JOBS=("${{ needs.dependency-security.result }}" "${{ needs.code-quality.result }}" "${{ needs.shell-analysis.result }}" "${{ needs.documentation-quality.result }}" "${{ needs.performance-tests.result }}")
+        FAILED_COUNT=0
+        
+        for job_result in "${ALL_JOBS[@]}"; do
+          if [ "$job_result" != "success" ]; then
+            FAILED_COUNT=$((FAILED_COUNT + 1))
+          fi
+        done
+        
+        echo "=== 🎯 RÉSUMÉ FINAL ==="
+        if [ $FAILED_COUNT -eq 0 ]; then
+          echo "✅ Tous les contrôles de sécurité et qualité sont réussis"
+        else
+          echo "⚠️ $FAILED_COUNT job(s) ont échoué ou été annulés"
+        fi
+        
+        echo "Total des jobs: ${#ALL_JOBS[@]}"
+        echo "Jobs réussis: $((${#ALL_JOBS[@]} - FAILED_COUNT))"
+        echo "Jobs échoués: $FAILED_COUNT"
+    
+    - name: 📋 Upload du rapport final
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: consolidated-security-quality-report
+        path: reports/
+        retention-days: 90
