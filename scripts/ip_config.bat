@@ -1,6 +1,6 @@
 @echo off
 ::===============================================================================
-:: Script de Configuration IP Unifié
+:: Script de Configuration IP
 :: Version: 2.0
 :: Description: Configuration réseau TCP/IP pour Windows avec interface interactive
 :: Fonctionnalités: DHCP, IP fixe, IP personnalisée
@@ -9,7 +9,7 @@
 
 echo.
 echo ========================================
-echo   Configuration TCP/IP - Script Unifie
+echo   Configuration TCP/IP
 echo ========================================
 echo.
 
@@ -42,7 +42,7 @@ if %errorLevel% NEQ 0 (
 cls
 echo.
 echo ========================================
-echo   Configuration TCP/IP - Script Unifie
+echo   Configuration TCP/IP
 echo ========================================
 echo.
 echo Interface reseau configuree: %NomConnexion%

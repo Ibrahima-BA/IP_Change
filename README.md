@@ -17,11 +17,10 @@
 ```
 IP_Change/
 ├── 📂 scripts/          # Scripts de configuration
-│   ├── ip_config_unified.bat      # 🌟 Script unifié Windows (RECOMMANDÉ)
+│   ├── ip_config.bat              # 🌟 Script Windows (RECOMMANDÉ)
 │   ├── script_IPchange.py         # Script Python multiplateforme
 │   ├── script_IPchange.sh         # Script Shell (macOS/Linux)
-│   ├── list_interfaces.py         # Utilitaire de détection d'interfaces
-│   └── script_IPchange*.bat       # Scripts Windows originaux
+│   └── list_interfaces.py         # Utilitaire de détection d'interfaces
 ├── 📂 docs/             # Documentation complète
 │   ├── QUICK_START.md             # Guide de démarrage rapide
 │   ├── CHANGELOG.md               # Historique des versions
@@ -33,7 +32,7 @@ IP_Change/
 
 ## ⭐ Fonctionnalités Principales
 
-### 🎯 Script Unifié Windows - **NOUVEAU !**
+### 🎯 Script Windows - **OPTIMISÉ !**
 - **Interface interactive complète** avec menu intuitif
 - **Configuration DHCP** automatique
 - **IP fixe prédéfinie** pour déploiements rapides  
@@ -57,7 +56,7 @@ IP_Change/
 
 ## 💻 Installation et Utilisation
 
-### Option 1: Script Unifié Windows (Recommandé)
+### Option 1: Script Windows (Recommandé)
 
 ```cmd
 # 1. Télécharger le projet
@@ -65,13 +64,13 @@ git clone https://github.com/votre-username/IP_Change.git
 cd IP_Change
 
 # 2. Exécuter en tant qu'administrateur
-# Clic droit sur scripts/ip_config_unified.bat → "Exécuter en tant qu'administrateur"
+# Clic droit sur scripts/ip_config.bat → "Exécuter en tant qu'administrateur"
 ```
 
-**Interface du script unifié :**
+**Interface du script :**
 ```
 ========================================
-  Configuration TCP/IP - Script Unifié
+  Configuration TCP/IP
 ========================================
 
 Interface réseau configurée: Ethernet
@@ -132,7 +131,7 @@ DNS_Secondaire=8.8.8.8     # DNS secondaire (Google)
 
 ### Modifier les Paramètres par Défaut
 
-**Script Unifié Windows :** Utilisez l'option 5 du menu pour modifier interactivement
+**Script Windows :** Utilisez l'option 5 du menu pour modifier interactivement
 
 **Script Python :** Éditez le dictionnaire `CONFIG` dans `scripts/script_IPchange.py`
 ```python
@@ -199,7 +198,7 @@ En cas de perte de connectivité :
 
 ## 📊 Comparaison des Scripts
 
-| Fonctionnalité | Script Unifié (.bat) | Script Python | Script Shell |
+| Fonctionnalité | Script Windows (.bat) | Script Python | Script Shell |
 |----------------|----------------------|---------------|--------------|
 | **Interface graphique** | ✅ Menu complet | ✅ Interface texte | ✅ Interface basique |
 | **Validation entrées** | ✅ Avancée | ✅ Complète | ⚠️ Basique |
@@ -231,7 +230,7 @@ En cas de perte de connectivité :
 
 ```batch
 REM Configuration pour poste de travail
-REM Modifier ip_config_unified.bat avant déploiement
+REM Modifier ip_config.bat avant déploiement
 SET IP_FIXE=192.168.100.50
 SET PASSERELLE=192.168.100.1
 SET DNS_PRIMAIRE=192.168.100.10
@@ -280,7 +279,7 @@ PROFILS = {
 
 **Licence :** Open Source - Utilisation libre pour usage personnel et professionnel
 
-**Contributions :** Ce projet rassemble et améliore plusieurs scripts de configuration réseau avec une interface unifiée et une documentation complète.
+**Contributions :** Ce projet rassemble et améliore plusieurs scripts de configuration réseau avec une interface complète et une documentation détaillée.
 
 **Compatibilité :** Testé sur Windows 10/11, macOS Big Sur+, Ubuntu 20.04+
 
