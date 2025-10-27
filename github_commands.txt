@@ -1,0 +1,19 @@
+# Commandes à exécuter après avoir créé le repository GitHub
+
+# 1. Ajouter l'origin remote (remplacez YOUR_USERNAME par votre nom d'utilisateur GitHub)
+git remote add origin https://github.com/YOUR_USERNAME/IPchange.git
+
+# 2. Renommer la branche principale en main (si nécessaire)
+git branch -M main
+
+# 3. Pousser le code et les tags
+git push -u origin main
+git push origin --tags
+
+# Alternative avec SSH (si vous avez configuré les clés SSH)
+# git remote add origin git@github.com:YOUR_USERNAME/IPchange.git
+# git push -u origin main
+# git push origin --tags
+
+# Pour vérifier que tout est bien connecté :
+git remote -v

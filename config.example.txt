@@ -1,0 +1,76 @@
+# Configuration IPchange - Exemple
+# Copiez ce fichier et modifiez les valeurs selon votre réseau
+
+# ============================================
+# CONFIGURATION POUR VOTRE RÉSEAU
+# ============================================
+
+# Interface réseau (voir list_interfaces.py pour trouver le nom)
+INTERFACE_WINDOWS=Ethernet
+INTERFACE_MAC=Wi-Fi
+INTERFACE_LINUX=eth0
+
+# Adresse IP fixe par défaut
+IP=192.168.71.10
+
+# Passerelle (généralement l'adresse de votre routeur)
+GATEWAY=192.168.71.254
+
+# Masque de sous-réseau (généralement 255.255.255.0 pour les réseaux domestiques)
+NETMASK=255.255.255.0
+
+# Serveur DNS
+DNS=10.10.131.1
+# Alternatives courantes :
+#   DNS=8.8.8.8          # Google DNS
+#   DNS=1.1.1.1          # Cloudflare DNS
+#   DNS=192.168.1.1      # Routeur local
+
+# ============================================
+# EXEMPLES DE CONFIGURATIONS COURANTES
+# ============================================
+
+# Configuration réseau domestique typique :
+#   IP=192.168.1.100
+#   GATEWAY=192.168.1.1
+#   NETMASK=255.255.255.0
+#   DNS=192.168.1.1
+
+# Configuration réseau d'entreprise typique :
+#   IP=10.0.151.100
+#   GATEWAY=10.0.151.1
+#   NETMASK=255.255.255.0
+#   DNS=10.0.151.1
+
+# Configuration avec sous-réseau classe A :
+#   IP=10.10.10.100
+#   GATEWAY=10.10.10.1
+#   NETMASK=255.255.255.0
+#   DNS=10.10.10.1
+
+# ============================================
+# COMMENT APPLIQUER CETTE CONFIGURATION
+# ============================================
+
+# 1. Identifiez vos valeurs réseau actuelles :
+#    macOS:   networksetup -getinfo Wi-Fi
+#    Windows: ipconfig /all
+#    Linux:   ip addr show
+
+# 2. Modifiez les scripts avec vos valeurs :
+#    - script_IPchange.py : Modifiez le dictionnaire CONFIG
+#    - script_IPchange.sh : Modifiez les variables au début
+#    - script_IPchange_ok.bat : Modifiez les variables SET
+
+# 3. Testez d'abord avec DHCP (option 1) avant d'utiliser une IP fixe
+
+# ============================================
+# NOTES IMPORTANTES
+# ============================================
+
+# - L'adresse IP doit être unique sur le réseau
+# - La passerelle est généralement l'adresse du routeur
+# - Le masque 255.255.255.0 permet 254 adresses (de .1 à .254)
+# - Évitez les adresses déjà utilisées (.1 est souvent le routeur)
+# - Pour vérifier si une IP est libre : ping <adresse>
+
