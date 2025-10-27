@@ -1,40 +1,111 @@
-# Python
+# ================================================
+# .gitignore pour IPchange - Configuration Réseau
+# ================================================
+
+# Fichiers de logs et debugging
+*.log
+*.tmp
+debug.txt
+error.txt
+sae_simulator.log
+
+# Fichiers de configuration personnalisés (gardez les .example)
+config.txt
+config.ini
+settings.ini
+network_config.txt
+
+# Sauvegardes de configuration réseau
+backup_*.txt
+config_backup_*.txt
+network_backup_*.txt
+
+# Fichiers temporaires Windows
+Thumbs.db
+*.tmp
+*.temp
+desktop.ini
+$RECYCLE.BIN/
+
+# Fichiers temporaires macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Fichiers temporaires Linux
+*~
+.nfs*
+
+# Environnements Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
 venv/
+env/
 ENV/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
 
-# IDEs
+# IDEs et éditeurs
 .vscode/
 .idea/
+*.sublime-project
+*.sublime-workspace
+.atom/
 *.swp
 *.swo
 *~
-.DS_Store
 
-# Logs
-*.log
+# Logs d'exécution des scripts
+execution.log
+run_*.log
+netsh_*.log
 
-# Backup files
-*.bak
-*~
+# Fichiers de test personnels
+test_*.py
+test_*.bat
+test_*.sh
+debug_*
 
+# Fichiers système et caches
+*.cache
+.cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Documentation générée automatiquement  
+docs/generated/
+site/
+_site/
+
+# Fichiers sensibles (ne jamais committer)
+credentials.txt
+passwords.txt
+private_*.txt
+secret_*
+*.key
+*.pem
+
+# Fichiers de build et distribution
+dist/
+build/
+*.exe
+*.msi
+*.dmg
+*.pkg
+
+# Archives temporaires
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Mais gardez les exemples et templates
+!examples/
+!*.example.*
+!template_*
+!README*
+!CHANGELOG*
+!docs/
